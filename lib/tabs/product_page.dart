@@ -17,7 +17,9 @@ class ProductPage extends StatefulWidget {
 class _ProductPageState extends State<ProductPage> {
   final DatabaseService _databaseService = DatabaseService();
   List<Product> _products = [];
+  List<Product> _filteredProducts = []; // Danh sách sản phẩm đã lọc
   AppUser? currentUser; // Biến để lưu thông tin người dùng hiện tại
+  String _searchQuery = ''; // Biến để lưu truy vấn tìm kiếm
 
   @override
   void initState() {
@@ -34,6 +36,20 @@ class _ProductPageState extends State<ProductPage> {
 
   void _loadProducts() async {
     _products = await _databaseService.readProducts();
+    _filteredProducts =
+        _products; // Khởi tạo danh sách đã lọc bằng danh sách gốc
+    setState(() {});
+  }
+
+  void _filterProducts(String query) {
+    if (query.isEmpty) {
+      _filteredProducts =
+          _products; // Nếu không có truy vấn, hiển thị tất cả sản phẩm
+    } else {
+      _filteredProducts = _products.where((product) {
+        return product.name.toLowerCase().contains(query.toLowerCase());
+      }).toList(); // Lọc sản phẩm theo tên
+    }
     setState(() {});
   }
 
@@ -51,67 +67,90 @@ class _ProductPageState extends State<ProductPage> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _products.length,
-        itemBuilder: (context, index) {
-          final product = _products[index];
-          return ListTile(
-            contentPadding: const EdgeInsets.all(8.0),
-            leading: product.imageUrl.isNotEmpty
-                ? Image.network(
-                    product.imageUrl,
-                    height: 100, // Chiều cao của ảnh
-                    width: 100, // Chiều rộng của ảnh
-                    fit: BoxFit.contain, // Cách hiển thị ảnh
-                  )
-                : const SizedBox(
-                    height: 100,
-                    width: 100,
-                    child: Icon(Icons.image,
-                        size: 100), // Hiển thị biểu tượng nếu không có ảnh
+      body: Column(
+        children: [
+          // Thêm TextField cho tìm kiếm
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: const InputDecoration(
+                labelText: 'Tìm kiếm sản phẩm',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                _searchQuery = value;
+                _filterProducts(_searchQuery); // Gọi hàm lọc sản phẩm
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredProducts.length,
+              itemBuilder: (context, index) {
+                final product = _filteredProducts[index];
+                return ListTile(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  leading: product.imageUrl.isNotEmpty
+                      ? Image.network(
+                          product.imageUrl,
+                          height: 100, // Chiều cao của ảnh
+                          width: 100, // Chiều rộng của ảnh
+                          fit: BoxFit.contain, // Cách hiển thị ảnh
+                        )
+                      : const SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: Icon(Icons.image,
+                              size:
+                                  100), // Hiển thị biểu tượng nếu không có ảnh
+                        ),
+                  title: Text(product.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          'Giá: ${product.price.toStringAsFixed(0)} VND'), // Định dạng giá tiền
+                      FutureBuilder<String>(
+                        future: _databaseService.getUserNameById(
+                            product.createdBy), // Truy vấn tên người tạo
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Text('Đang tải tên người tạo...');
+                          } else if (snapshot.hasError) {
+                            return const Text('Lỗi khi tải tên người tạo');
+                          } else {
+                            return Text(
+                                'Người tạo: ${snapshot.data}'); // Hiển thị tên người tạo
+                          }
+                        },
+                      ),
+                    ],
                   ),
-            title: Text(product.name,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                    'Giá: ${product.price.toStringAsFixed(0)} VND'), // Định dạng giá tiền
-                FutureBuilder<String>(
-                  future: _databaseService.getUserNameById(
-                      product.createdBy), // Truy vấn tên người tạo
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Text('Đang tải tên người tạo...');
-                    } else if (snapshot.hasError) {
-                      return const Text('Lỗi khi tải tên người tạo');
-                    } else {
-                      return Text(
-                          'Người tạo: ${snapshot.data}'); // Hiển thị tên người tạo
-                    }
-                  },
-                ),
-              ],
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          _showEditProductDialog(
+                              context, product); // Sửa sản phẩm
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          _deleteProduct(product); // Xóa sản phẩm
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    _showEditProductDialog(context, product); // Sửa sản phẩm
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    _deleteProduct(product); // Xóa sản phẩm
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

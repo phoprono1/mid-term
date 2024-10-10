@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/user.dart';
-import '../service/database_service.dart'; // Nhập DatabaseService
+import '../service/database_service.dart';
+import 'sign_in.dart'; // Nhập DatabaseService
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -121,6 +122,19 @@ class _SignUpPageState extends State<SignUpPage> {
                   }
                 },
                 child: const Text('Đăng Ký'),
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  // Chuyển hướng đến trang đăng nhập
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            LoginPage()), // Thay LoginPage bằng trang đăng nhập của bạn
+                  );
+                },
+                child: const Text('Đã có tài khoản? Đăng nhập ngay!'),
               ),
             ],
           ),

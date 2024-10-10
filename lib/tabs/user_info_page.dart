@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Nhập Firebase Auth
+import '../auth/sign_in.dart';
 import '../model/user.dart'; // Nhập lớp User
 
 class UserInfoPage extends StatelessWidget {
@@ -44,6 +46,21 @@ class UserInfoPage extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Xử lý đăng xuất
+                    await FirebaseAuth.instance.signOut();
+                    // Chuyển hướng về trang đăng nhập hoặc trang chính
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              LoginPage()), // Thay LoginPage bằng trang đăng nhập của bạn
+                      (Route<dynamic> route) => false,
+                    );
+                  },
+                  child: const Text('Đăng Xuất'),
                 ),
               ],
             ),

@@ -2,7 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mid_term/model/user.dart';
 import '../service/database_service.dart'; // Nhập DatabaseService
-import '../tabs/bottom_navigation_bar.dart'; // Nhập BottomNavigationBar
+import '../tabs/bottom_navigation_bar.dart';
+import 'sign_up.dart'; // Nhập BottomNavigationBar
 
 class LoginPage extends StatefulWidget {
   @override
@@ -91,6 +92,19 @@ class _LoginPageState extends State<LoginPage> {
                   }
                 },
                 child: const Text('Đăng Nhập'),
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  // Chuyển hướng đến trang đăng ký
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            SignUpPage()), // Thay SignUpPage bằng trang đăng ký của bạn
+                  );
+                },
+                child: const Text('Chưa có tài khoản? Đăng ký ngay!'),
               ),
             ],
           ),
